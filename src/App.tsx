@@ -18,18 +18,25 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [activeSearch, setActiveSearch] = useState('')
 
   useEffect(() => {
-    fetchVideos(currentPage)
-  }, [currentPage])
+    fetchVideos(currentPage, activeSearch)
+  }, [currentPage, activeSearch])
 
-  const fetchVideos = async (page: number) => {
+  const fetchVideos = async (page: number, search: string = '') => {
     try {
       setLoading(true)
       setError(null)
 
+      let query = 'collection:"giant-bomb-archive"'
+      if (search.trim()) {
+        query += ` AND title:${search.trim()}`
+      }
+
       const params = new URLSearchParams({
-        q: 'collection:"giant-bomb-archive"',
+        q: query,
         'fl[]': 'identifier',
         rows: '50',
         page: page.toString(),
@@ -86,6 +93,22 @@ function App() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    setActiveSearch(searchTerm)
+    setCurrentPage(1)
+    setSelectedVideo(null)
+    window.scrollTo(0, 0)
+  }
+
+  const clearSearch = () => {
+    setSearchTerm('')
+    setActiveSearch('')
+    setCurrentPage(1)
+    setSelectedVideo(null)
+    window.scrollTo(0, 0)
   }
 
   const goToNextPage = () => {
@@ -145,7 +168,29 @@ function App() {
     <div className="app">
       <header className="header">
         <h1>Giant Bomb Archive</h1>
-        <p>{videos.length} videos on page {currentPage}</p>
+        <form onSubmit={handleSearch} className="search-form">
+          <div className="search-container">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search videos by title..."
+              className="search-input"
+            />
+            <button type="submit" className="search-button">
+              Search
+            </button>
+            {activeSearch && (
+              <button type="button" onClick={clearSearch} className="clear-button">
+                Clear
+              </button>
+            )}
+          </div>
+        </form>
+        <p>
+          {videos.length} videos on page {currentPage}
+          {activeSearch && <span className="search-indicator"> - Searching for: "{activeSearch}"</span>}
+        </p>
       </header>
 
       {selectedVideo ? (
