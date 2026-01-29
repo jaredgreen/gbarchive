@@ -152,7 +152,8 @@ function App() {
       const parser = new DOMParser()
       const doc = parser.parseFromString(htmlDescription, 'text/html')
       const firstParagraph = doc.querySelector('p')
-      return firstParagraph?.textContent?.trim() || ''
+      const text = firstParagraph?.textContent?.trim() || ''
+      return text.replace(/\.$/, '')
     } catch {
       return ''
     }
