@@ -167,9 +167,22 @@
 }
 
 .video-date {
-  margin: 0;
+  margin: 0 0 0.5rem 0;
   font-size: 0.875rem;
   color: #888;
+}
+
+.video-description {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #aaa;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
 }
 
 .video-player-container {

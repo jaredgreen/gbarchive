@@ -145,6 +145,19 @@ function App() {
     }
   }
 
+  const extractDescription = (htmlDescription: string): string => {
+    if (!htmlDescription) return ''
+
+    try {
+      const parser = new DOMParser()
+      const doc = parser.parseFromString(htmlDescription, 'text/html')
+      const firstParagraph = doc.querySelector('p')
+      return firstParagraph?.textContent?.trim() || ''
+    } catch {
+      return ''
+    }
+  }
+
   if (loading) {
     return (
       <div className="app">
@@ -236,6 +249,9 @@ function App() {
                 <div className="video-info">
                   <h3 className="video-title">{video.title}</h3>
                   <p className="video-date">{formatDate(video.pubDate)}</p>
+                  {extractDescription(video.description) && (
+                    <p className="video-description">{extractDescription(video.description)}</p>
+                  )}
                 </div>
               </div>
             ))}
