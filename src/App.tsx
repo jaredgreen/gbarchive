@@ -38,6 +38,7 @@ function App() {
       const params = new URLSearchParams({
         q: query,
         'fl[]': 'identifier',
+        'sort[]': 'date desc',
         rows: '50',
         page: page.toString(),
         output: 'rss',
