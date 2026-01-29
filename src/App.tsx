@@ -1,34 +1,171 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useState, useEffect } from 'react'
 import './App.css'
 
+interface Video {
+  title: string
+  link: string
+  pubDate: string
+  description: string
+  thumbnail: string
+  videoUrl: string
+  guid: string
+}
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [videos, setVideos] = useState<Video[]>([])
+  const [selectedVideo, setSelectedVideo] = useState<Video | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetchVideos()
+  }, [])
+
+  const fetchVideos = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const response = await fetch(
+        // 'https://archive.org/services/collection-rss.php?collection=giant-bomb-archive'
+        '/api/rss?collection=giant-bomb-archive'
+      )
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch RSS feed')
+      }
+
+      const xmlText = await response.text()
+      const parser = new DOMParser()
+      const xmlDoc = parser.parseFromString(xmlText, 'text/xml')
+
+      const items = xmlDoc.querySelectorAll('item')
+      const parsedVideos: Video[] = []
+
+      items.forEach((item) => {
+        const title = item.querySelector('title')?.textContent || 'Untitled'
+        const link = item.querySelector('link')?.textContent || ''
+        const pubDate = item.querySelector('pubDate')?.textContent || ''
+        const description = item.querySelector('description')?.textContent || ''
+        const guid = item.querySelector('guid')?.textContent || ''
+
+        const thumbnail = item.querySelector('thumbnail')?.getAttribute('url') ||
+                         item.getElementsByTagName('media\\:thumbnail')[0]?.getAttribute('url') ||
+                         item.getElementsByTagNameNS('http://search.yahoo.com/mrss/', 'thumbnail')[0]?.getAttribute('url') || ''
+
+        const videoContent = item.querySelector('content')?.getAttribute('url') ||
+                            item.getElementsByTagName('media\\:content')[0]?.getAttribute('url') ||
+                            item.getElementsByTagNameNS('http://search.yahoo.com/mrss/', 'content')[0]?.getAttribute('url') ||
+                            item.querySelector('enclosure')?.getAttribute('url') || ''
+
+        if (title && link) {
+          parsedVideos.push({
+            title,
+            link,
+            pubDate,
+            description,
+            thumbnail,
+            videoUrl: videoContent,
+            guid
+          })
+        }
+      })
+
+      setVideos(parsedVideos)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString)
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      })
+    } catch {
+      return dateString
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="app">
+        <div className="loading">Loading Giant Bomb Archive...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="app">
+        <div className="error">
+          <h2>Error</h2>
+          <p>{error}</p>
+          <button onClick={fetchVideos}>Retry</button>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div className="app">
+      <header className="header">
+        <h1>Giant Bomb Archive</h1>
+        <p>{videos.length} videos available</p>
+      </header>
+
+      {selectedVideo ? (
+        <div className="video-player-container">
+          <button className="back-button" onClick={() => setSelectedVideo(null)}>
+            &larr; Back to List
+          </button>
+          <div className="video-player">
+            <h2>{selectedVideo.title}</h2>
+            <p className="video-date">{formatDate(selectedVideo.pubDate)}</p>
+            {selectedVideo.videoUrl ? (
+              <video controls autoPlay className="video-element">
+                <source src={selectedVideo.videoUrl} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            ) : (
+              <div className="no-video">
+                <p>Video file not available</p>
+                <a href={selectedVideo.link} target="_blank" rel="noopener noreferrer">
+                  View on Archive.org
+                </a>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="video-grid">
+          {videos.map((video) => (
+            <div
+              key={video.guid}
+              className="video-card"
+              onClick={() => setSelectedVideo(video)}
+            >
+              {video.thumbnail && (
+                <img
+                  src={video.thumbnail}
+                  alt={video.title}
+                  className="video-thumbnail"
+                />
+              )}
+              <div className="video-info">
+                <h3 className="video-title">{video.title}</h3>
+                <p className="video-date">{formatDate(video.pubDate)}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
