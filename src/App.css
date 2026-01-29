@@ -52,9 +52,11 @@
 
 .video-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 1.5rem;
   padding: 1rem 0;
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
 .video-card {
@@ -175,9 +177,78 @@
   background: rgba(100, 108, 255, 0.2);
 }
 
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  margin-top: 3rem;
+  padding: 2rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pagination-button {
+  padding: 0.8rem 1.5rem;
+  background: rgba(100, 108, 255, 0.1);
+  color: white;
+  border: 1px solid #646cff;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s;
+  min-width: 120px;
+}
+
+.pagination-button:hover:not(:disabled) {
+  background: rgba(100, 108, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.pagination-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.pagination-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.page-number {
+  font-size: 1.1rem;
+  color: #fff;
+  font-weight: 500;
+}
+
+.page-jump {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.page-input {
+  width: 80px;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: white;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.page-input:focus {
+  outline: none;
+  border-color: #646cff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
 @media (max-width: 768px) {
   .video-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    grid-template-columns: 1fr;
     gap: 1rem;
   }
 
@@ -191,5 +262,20 @@
 
   .video-player h2 {
     font-size: 1.4rem;
+  }
+
+  .pagination {
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .pagination-button {
+    min-width: 100px;
+    padding: 0.7rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .page-number {
+    font-size: 1rem;
   }
 }

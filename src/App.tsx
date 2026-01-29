@@ -16,20 +16,28 @@ function App() {
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
 
   useEffect(() => {
-    fetchVideos()
-  }, [])
+    fetchVideos(currentPage)
+  }, [currentPage])
 
-  const fetchVideos = async () => {
+  const fetchVideos = async (page: number) => {
     try {
       setLoading(true)
       setError(null)
 
-      const response = await fetch(
-        // 'https://archive.org/services/collection-rss.php?collection=giant-bomb-archive'
-        '/api/rss?collection=giant-bomb-archive'
-      )
+      const params = new URLSearchParams({
+        q: 'collection:"giant-bomb-archive"',
+        'fl[]': 'identifier',
+        rows: '50',
+        page: page.toString(),
+        output: 'rss',
+        save: 'yes'
+      })
+
+      const response = await fetch(`/api/search?${params.toString()}`)
 
       if (!response.ok) {
         throw new Error('Failed to fetch RSS feed')
@@ -72,11 +80,32 @@ function App() {
       })
 
       setVideos(parsedVideos)
+      setHasMore(parsedVideos.length >= 50)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setLoading(false)
     }
+  }
+
+  const goToNextPage = () => {
+    setCurrentPage(prev => prev + 1)
+    setSelectedVideo(null)
+    window.scrollTo(0, 0)
+  }
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(prev => prev - 1)
+      setSelectedVideo(null)
+      window.scrollTo(0, 0)
+    }
+  }
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page)
+    setSelectedVideo(null)
+    window.scrollTo(0, 0)
   }
 
   const formatDate = (dateString: string) => {
@@ -116,7 +145,7 @@ function App() {
     <div className="app">
       <header className="header">
         <h1>Giant Bomb Archive</h1>
-        <p>{videos.length} videos available</p>
+        <p>{videos.length} videos on page {currentPage}</p>
       </header>
 
       {selectedVideo ? (
@@ -143,27 +172,64 @@ function App() {
           </div>
         </div>
       ) : (
-        <div className="video-grid">
-          {videos.map((video) => (
-            <div
-              key={video.guid}
-              className="video-card"
-              onClick={() => setSelectedVideo(video)}
+        <>
+          <div className="video-grid">
+            {videos.map((video) => (
+              <div
+                key={video.guid}
+                className="video-card"
+                onClick={() => setSelectedVideo(video)}
+              >
+                {video.thumbnail && (
+                  <img
+                    src={video.thumbnail}
+                    alt={video.title}
+                    className="video-thumbnail"
+                  />
+                )}
+                <div className="video-info">
+                  <h3 className="video-title">{video.title}</h3>
+                  <p className="video-date">{formatDate(video.pubDate)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="pagination">
+            <button
+              className="pagination-button"
+              onClick={goToPreviousPage}
+              disabled={currentPage === 1}
             >
-              {video.thumbnail && (
-                <img
-                  src={video.thumbnail}
-                  alt={video.title}
-                  className="video-thumbnail"
+              &larr; Previous
+            </button>
+
+            <div className="pagination-info">
+              <span className="page-number">Page {currentPage}</span>
+              <div className="page-jump">
+                <input
+                  type="number"
+                  min="1"
+                  value={currentPage}
+                  onChange={(e) => {
+                    const page = parseInt(e.target.value)
+                    if (page > 0) goToPage(page)
+                  }}
+                  className="page-input"
+                  placeholder="Page"
                 />
-              )}
-              <div className="video-info">
-                <h3 className="video-title">{video.title}</h3>
-                <p className="video-date">{formatDate(video.pubDate)}</p>
               </div>
             </div>
-          ))}
-        </div>
+
+            <button
+              className="pagination-button"
+              onClick={goToNextPage}
+              disabled={!hasMore}
+            >
+              Next &rarr;
+            </button>
+          </div>
+        </>
       )}
     </div>
   )

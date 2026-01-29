@@ -6,10 +6,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api/rss': {
+      '/api/search': {
         target: 'https://archive.org',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/rss/, '/services/collection-rss.php'),
+        rewrite: (path) => path.replace(/^\/api\/search/, '/advancedsearch.php'),
       },
     },
   },
