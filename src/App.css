@@ -1,5 +1,5 @@
 .app {
-  max-width: 1400px;
+  max-width: 95%;
   margin: 0 auto;
   padding: 2rem;
 }
@@ -123,11 +123,9 @@
 
 .video-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
   padding: 1rem 0;
-  max-width: 1000px;
-  margin: 0 auto;
 }
 
 .video-card {
@@ -317,7 +315,18 @@
   background: rgba(255, 255, 255, 0.08);
 }
 
+@media (max-width: 1024px) {
+  .video-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+}
+
 @media (max-width: 768px) {
+  .app {
+    max-width: 100%;
+    padding: 1rem;
+  }
+
   .video-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
